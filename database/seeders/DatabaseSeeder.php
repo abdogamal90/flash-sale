@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Sample Product',
             'available_stock' => 100,
             'price' => 29.99,
+            'total_stock' => 200,
         ]);
     }
 }

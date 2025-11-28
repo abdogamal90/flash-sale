@@ -6,10 +6,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Model;
 
-class Product {
+class Product extends Model {
 
-  /** @use HasFactory<\Database\Factories\UserFactory> */
+  /** @use HasFactory<\Database\Factories\ProductFactory> */
     use HasFactory, Notifiable;
 
      /**
@@ -20,6 +21,7 @@ class Product {
     protected $fillable = [
         'name',
         'available_stock',
+        'total_stock',
         'price',
     ];
 

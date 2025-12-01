@@ -5,6 +5,7 @@ use App\Models\Hold;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\ReleaseExpiredHold;
 
 class HoldController extends Controller
 {
@@ -60,6 +61,8 @@ class HoldController extends Controller
                 'quantity' => $validated['quantity'],
                 'hold_expires_at' => $hold_expires_at,
             ]);
+
+            ReleaseExpiredHold::dispatch($hold->id)->delay($hold->hold_expires_at);
 
             return $hold;
         });

@@ -24,11 +24,20 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
-        Product::factory()->create([
-            'name' => 'Sample Product',
-            'available_stock' => 100,
-            'price' => 29.99,
-            'total_stock' => 200,
-        ]);
+        // Product::factory()->create([
+        //     'name' => 'Sample Product',
+        //     'available_stock' => 100,
+        //     'price' => 29.99,
+        //     'total_stock' => 200,
+        // ]);
+
+        for($i = 1; $i <= 5; $i++) {
+            Product::factory()->create([
+                'name' => 'Product ' . $i,
+                'available_stock' => rand(50, 150),
+                'price' => rand(10, 100),
+                'total_stock' => rand(100, 200),
+            ]);
+        }
     }
 }

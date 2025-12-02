@@ -21,17 +21,11 @@ class Order extends Model {
     protected $fillable = [
         'hold_id',
         'status',
+        'payment_idempotency_key',
     ];
 
     public function hold(){
         return $this->belongsTo(Hold::class);
-    }
-
-    protected function casts(): array
-    {
-        return [
-            'status' => 'integer',
-        ];
     }
 
     // MAKE STATUS CONSTANTS

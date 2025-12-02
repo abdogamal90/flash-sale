@@ -304,79 +304,95 @@ redis-cli
 > GET "laravel_database_product_1"
 ```
 
-## Production Deployment
+## Queues and Background Jobs
 
-### Required Services
-1. **Web Server**: Nginx/Apache with PHP-FPM
-2. **Queue Worker**: Supervisor to keep `queue:work` running
-3. **Scheduler**: Cron entry for `schedule:run`
-4. **Redis**: For caching and sessions
-5. **MySQL**: InnoDB engine required
+This application uses Laravel queues to handle hold expiry in the background.
 
-### Supervisor Config (Queue Worker)
-```ini
-[program:flash-sale-worker]
-process_name=%(program_name)s_%(process_num)02d
-command=php /path/to/flash-sale/artisan queue:work --sleep=3 --tries=3 --max-time=3600
-autostart=true
-autorestart=true
-user=www-data
-numprocs=2
-redirect_stderr=true
-stdout_logfile=/path/to/flash-sale/storage/logs/worker.log
+### Why Queues?
+
+When a hold is created, a job is dispatched to automatically release it after 2 minutes. Without queue workers, these jobs won't execute and holds won't be released automatically.
+
+### Queue Configuration
+
+The project uses **database** driver for queues (no additional setup needed):
+
+```env
+# .env
+QUEUE_CONNECTION=database
 ```
 
-### Cron Entry (Scheduler)
-```cron
-* * * * * cd /path/to/flash-sale && php artisan schedule:run >> /dev/null 2>&1
+Queue jobs are stored in the `jobs` table in the database.
+
+### Running the Queue Worker
+
+**Development (foreground):**
+```bash
+php artisan queue:work
 ```
 
-## Performance Considerations
+Keep this running in a separate terminal. It will:
+- Process `ReleaseExpiredHold` jobs at their scheduled time
+- Listen for new jobs continuously
+- Restart automatically on code changes (with `--timeout` flag)
 
-- **Pessimistic Locking**: Serializes stock updates, max throughput ~1000 req/s per product
-- **Redis Caching**: Reduces DB load for product reads by 90%+
-- **Queue Workers**: Scale horizontally by adding more workers
-- **Database Indexing**: Foreign keys and timestamps indexed by default
+**With options:**
+```bash
+# Process jobs with timeout and retries
+php artisan queue:work --sleep=3 --tries=3 --max-time=3600
 
-## License
+# Process specific queue
+php artisan queue:work --queue=default
 
-Open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Stop after processing all jobs
+php artisan queue:work --stop-when-empty
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Queue Commands
 
-## Learning Laravel
+**View failed jobs:**
+```bash
+php artisan queue:failed
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+**Retry failed jobs:**
+```bash
+# Retry specific job
+php artisan queue:retry {job-id}
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# Retry all failed jobs
+php artisan queue:retry all
+```
 
-## Laravel Sponsors
+**Clear failed jobs:**
+```bash
+php artisan queue:flush
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+**Monitor queue in real-time:**
+```bash
+php artisan queue:monitor
+```
 
-### Premium Partners
+### Scheduled Tasks (Scheduler)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+The backup hold release command runs every 5 minutes via Laravel's scheduler.
 
-## Contributing
+**Development:**
+```bash
+php artisan schedule:work
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### How Jobs Work in This Project
 
-## Code of Conduct
+1. **Hold created** → `ReleaseExpiredHold` job dispatched with 2-minute delay
+2. **Queue worker** processes job at scheduled time (2 min later)
+3. **Job checks** if hold still needs release (not already released, not used for order)
+4. **Stock restored** to product and hold marked as released
+5. **Scheduled command** runs every 5 min to catch any missed jobs
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+**View dispatched jobs:**
+```bash
+# Check jobs table
+mysql -u flash_sale -p flash_sale
+SELECT * FROM jobs;
+```

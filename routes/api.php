@@ -23,3 +23,9 @@ Route::post('/products/{id}/buy', [ProductController::class, 'buy']);
 Route::get('/holds', [App\Http\Controllers\HoldController::class, 'index']);
 Route::get('/holds/{id}', [App\Http\Controllers\HoldController::class, 'show']);
 Route::post('/holds', [App\Http\Controllers\HoldController::class, 'create']);
+
+//orders
+
+Route::get('/orders', [App\Http\Controllers\OrderController::class, 'index']);
+Route::get('/orders/{id}', [App\Http\Controllers\OrderController::class, 'show']);
+Route::post('/orders', [App\Http\Controllers\OrderController::class, 'create']);

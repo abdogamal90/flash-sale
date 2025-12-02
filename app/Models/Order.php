@@ -6,9 +6,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Product;
+use App\Models\Hold;
 
-class Hold extends Model {
+class Order extends Model {
 
   /** @use HasFactory<\Database\Factories\HoldFactory> */
     use HasFactory;
@@ -19,25 +19,23 @@ class Hold extends Model {
      * @var list<string>
      */
     protected $fillable = [
-        'product_id',
-        'quantity',
-        'hold_expires_at',
+        'hold_id',
+        'status',
     ];
 
-    public function product(){
-        return $this->belongsTo(Product::class);
-    }
-
-    public function order(){
-        return $this->hasOne(Order::class);
+    public function hold(){
+        return $this->belongsTo(Hold::class);
     }
 
     protected function casts(): array
     {
         return [
-            'hold_expires_at' => 'datetime',
-            'released_at' => 'datetime',
+            'status' => 'integer',
         ];
     }
 
+    // MAKE STATUS CONSTANTS
+    const PENDING = 'pending';
+    const COMPLETED = 'completed';
+    const CANCELLED = 'cancelled';
 }

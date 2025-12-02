@@ -57,6 +57,10 @@ class OrderController extends Controller
                 throw new \Exception('Cannot create order: Hold is already associated with an order');
             }
 
+            // Mark the hold as used
+            $hold->used_at = now();
+            $hold->save();
+
             // Create the order
             return Order::create(
                 $request->only(['hold_id']) + ['status' => Order::PENDING]

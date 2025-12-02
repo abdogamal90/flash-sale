@@ -29,3 +29,6 @@ Route::post('/holds', [App\Http\Controllers\HoldController::class, 'create']);
 Route::get('/orders', [App\Http\Controllers\OrderController::class, 'index']);
 Route::get('/orders/{id}', [App\Http\Controllers\OrderController::class, 'show']);
 Route::post('/orders', [App\Http\Controllers\OrderController::class, 'create']);
+
+// payment webhook
+Route::post('/payments/webhook', [App\Http\Controllers\PaymentWebhookController::class, 'handle']);

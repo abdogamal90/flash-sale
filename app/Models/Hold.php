@@ -37,6 +37,7 @@ class Hold extends Model {
         return [
             'hold_expires_at' => 'datetime',
             'released_at' => 'datetime',
+            'used_at' => 'datetime',
         ];
     }
 

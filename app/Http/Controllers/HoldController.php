@@ -62,7 +62,20 @@ class HoldController extends Controller
                 'hold_expires_at' => $hold_expires_at,
             ]);
 
+            Log::info('Hold created successfully', [
+                'hold_id' => $hold->id,
+                'product_id' => $product->id,
+                'quantity' => $hold->quantity,
+                'hold_expires_at' => $hold_expires_at,
+            ]);
+
             ReleaseExpiredHold::dispatch($hold->id)->delay($hold->hold_expires_at);
+
+            Log::info('ReleaseExpiredHold job dispatched', [
+                'hold_id' => $hold->id,
+                'dispatch_time' => now()->toISOString(),
+                'scheduled_run_time' => $hold->hold_expires_at->toISOString(),
+            ]);
 
             return $hold;
         });

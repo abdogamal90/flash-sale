@@ -65,6 +65,13 @@ class OrderController extends Controller
             return Order::create(
                 $request->only(['hold_id']) + ['status' => Order::PENDING]
             );
+
+            Log::info('Order created successfully', [
+                'order_id' => $order->id,
+                'hold_id' => $hold->id,
+                'product_id' => $hold->product_id,
+                'quantity' => $hold->quantity
+            ]);
         });
 
         return response()->json([

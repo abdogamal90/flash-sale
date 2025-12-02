@@ -11,6 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class ReleaseExpiredHold implements ShouldQueue
 {
@@ -51,6 +52,9 @@ class ReleaseExpiredHold implements ShouldQueue
             
             $product->available_stock += $hold->quantity;
             $product->save();
+            
+            // Invalidate product cache
+            Cache::forget("product_{$product->id}");
             
             $hold->released_at = now();
             $hold->save();

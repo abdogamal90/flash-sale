@@ -7,6 +7,7 @@ use App\Models\Product;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class ReleaseExpiredHolds extends Command
 {
@@ -67,6 +68,9 @@ class ReleaseExpiredHolds extends Command
                     
                     $product->available_stock += $lockedHold->quantity;
                     $product->save();
+                    
+                    // Invalidate product cache
+                    Cache::forget("product_{$product->id}");
                     
                     $lockedHold->released_at = now();
                     $lockedHold->save();

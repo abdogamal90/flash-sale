@@ -5,6 +5,7 @@ use App\Models\Hold;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use App\Jobs\ReleaseExpiredHold;
 
 class HoldController extends Controller
@@ -53,6 +54,9 @@ class HoldController extends Controller
             // Decrement stock atomically
             $product->available_stock -= $validated['quantity'];
             $product->save();
+
+            // Invalidate product cache
+            Cache::forget("product_{$product->id}");
 
             // Create hold
             $hold_expires_at = now()->addMinutes(2);

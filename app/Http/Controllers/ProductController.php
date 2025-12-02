@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ProductController extends Controller
 {
@@ -13,8 +14,11 @@ class ProductController extends Controller
   }
 
   public function show($id){
+    // Cache product for 60 seconds
+    $product = Cache::remember("product_{$id}", 60, function () use ($id) {
+        return Product::find($id);
+    });
 
-    $product = Product::find($id);
     if(!$product){
         return response()->json([
             'status' => 'error',
